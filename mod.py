@@ -21,7 +21,7 @@ def create_welcome_embed(member):#member when ever they come they got hello from
         color=discord.Color.from_rgb(255, 105, 180)
     )
           embed.set_thumbnail(url=member.display_avatar.url)
-          embed.set_image(url="")
+          embed.set_image(url="https://media.tenor.com/6A9PQotS4eYAAAAm/i%27m-gay-gay.webp")
           embed.set_footer(
         text=f"You are member #{member.guild.member_count} ✨"
     )
