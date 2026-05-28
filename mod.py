@@ -9,11 +9,30 @@ from discord.ui import View,Button#nbutton working on it
 from dotenv import load_dotenv #env file se information inkalta tha like token
 from discord.ext import commands # this a use for calling command (ext = extension /tools coomand = command system main dicord libary)
 def create_welcome_embed(member):#member when ever they come they got hello from the bot
-      embed=discord.Embed(title="welcome! to our server\n",
-                          description=f"welcome enjoy your time with us\n {member.name}! \n make sure to join and follow us on social media",
-                          color=0x8B0000)
-      embed.set_thumbnail(url=member.display_avatar.url)# discort me join ker wake members ka photo lagta hai
-      return embed # this is for fancy text message use for titles decription etc
+          embed = discord.Embed(
+        title="🌸 Welcome to the Server 🌸",
+        description=(
+            f"Hey {member.mention} 💖\n\n"
+            "We're super happy you're here ✨\n"
+            "Enjoy cozy vibes, music, fun and amazing people 🌙\n\n"
+            "🎶 Use `!play <song>` to enjoy music with Kuku\n"
+            "💌 Make yourself at home!"
+        ),
+        color=discord.Color.from_rgb(255, 105, 180)
+    )
+          embed.set_thumbnail(url=member.display_avatar.url)
+          embed.set_image(
+        url="https://tenor.com/en-GB/view/congratulations-congrats-good-job-well-done-good-gif-13901289319277654188")
+          embed.set_footer(
+        text=f"You are member #{member.guild.member_count} ✨"
+    )
+          return embed
+     
+
+
+
+
+
 intents = discord.Intents.default()# it is use for what information i want to give to my bot
 intents.message_content = True# bot can read message
 intents.members= True #bot can detect join or leave
@@ -22,64 +41,166 @@ bot = commands.Bot(command_prefix= "!", intents=intents)
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-'''class MusicControls(View):
-     def __init__(self,vc):
-          super().__init__(timeout=None)
-          self.vc=vc
-          @discord.ui.button(label="pause",
-                         style=discord.ButtonStyle.grey)
-          async def pause_button(self,interaction:discord.Interaction,button:Button):
-               if self.vc.is_playing():
-                    self.vc.pause()
-                    await interaction.response.send_message("▶️ RESUMED",ephemeral=True)
-               elif self.vc.is_paused():
-                    self.vc.resume()
-                    await interaction.response.send_message("▶️resumed",ephemeral=True)
-
-          @discord.ui.button(label="skip",style = discord.ButtonStyle.blurple)
-          async def skip_button(self,interaction:discord.Interaction,button:Button):
-               await self.vc.stop()
-               await interaction.response.send_message(
-            "⏭️ Skipped",
-            ephemeral=True)
-          @discord.ui.button(label="stop",style = discord.ButtonStyle.red)
-          async def stop_button(self,interaction:discord.Interaction,button:Button):
-               await self.vc.disconnect()
-               await interaction.response.send_message("⏹️ stopped",
-                                                       ephemeral= True)
-          
-
-'''
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+love_count={}
 class MusicControls(View):
 
     def __init__(self, vc):
         super().__init__(timeout=None)
         self.vc = vc
 
-    @discord.ui.button(label="Pause", style=discord.ButtonStyle.grey)
-    async def pause_button(self, interaction: discord.Interaction, button: Button):
-
-        if self.vc.is_playing():
-            self.vc.pause()
-            await interaction.response.send_message("⏸ paused", ephemeral=True)
-
-        elif self.vc.is_paused():
-            self.vc.resume()
-            await interaction.response.send_message("▶ resumed", ephemeral=True)
-
     @discord.ui.button(label="Stop", style=discord.ButtonStyle.red)
     async def stop_button(self, interaction: discord.Interaction, button: Button):
 
         await self.vc.disconnect()
         await interaction.response.send_message("⏹ stopped", ephemeral=True)
-    @discord.ui.button(label="skip",style = discord.ButtonStyle.blurple)
-    async def skip_button(self,interaction:discord.Interaction,button:Button):
-      self.vc.stop()
-      await interaction.response.send_message(
-            "⏭️ Skipped",
-            ephemeral=True)
+
+          # ⏸ Pause / Resume
+    @discord.ui.button(emoji="⏸️", style=discord.ButtonStyle.secondary)
+    async def pause_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        vc = interaction.guild.voice_client
+
+        if vc.is_playing():
+            vc.pause()
+            await interaction.response.send_message(
+                "⏸️ Music Paused",
+                ephemeral=True
+            )
+
+        elif vc.is_paused():
+            vc.resume()
+            await interaction.response.send_message(
+                "▶️ Music Resumed",
+                ephemeral=True
+            )
+
+
+    # ⏭ Skip
+    @discord.ui.button(emoji="⏭️", style=discord.ButtonStyle.primary)
+    async def skip_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        vc = interaction.guild.voice_client
+
+        if vc and (vc.is_playing() or vc.is_paused()):
+            vc.stop()
+
+            await interaction.response.send_message(
+                "⏭️ Song Skipped",
+                ephemeral=True
+            )
+
+
+    # 🔁 Repeat
+    @discord.ui.button(label="Repeat", emoji="🔁", style=discord.ButtonStyle.success)
+    async def repeat_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        guild_id = interaction.guild.id
+
+        repeat_modes[guild_id] = not repeat_modes.get(guild_id, False)
+
+        if repeat_modes[guild_id]:
+
+            await interaction.response.send_message(
+                "🔁 Repeat Enabled",
+                ephemeral=True
+            )
+
+        else:
+
+            await interaction.response.send_message(
+                "❌ Repeat Disabled",
+                ephemeral=True
+            )
+
+
+    # ♾️ Autoplay
+    @discord.ui.button(label="Autoplay", emoji="♾️", style=discord.ButtonStyle.primary)
+    async def autoplay_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        guild_id = interaction.guild.id
+
+        autoplay_servers[guild_id] = not autoplay_servers.get(guild_id, False)
+
+        if autoplay_servers[guild_id]:
+
+            await interaction.response.send_message(
+                "♾️ Autoplay Enabled",
+                ephemeral=True
+            )
+
+        else:
+
+            await interaction.response.send_message(
+                "❌ Autoplay Disabled",
+                ephemeral=True
+            )
+
+
+    # ❤️ Love Counter
+    @discord.ui.button(label="Love", emoji="❤️", style=discord.ButtonStyle.danger)
+    async def love_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        guild_id = interaction.guild.id
+
+        if guild_id not in love_count:
+            love_count[guild_id] = 0
+
+        love_count[guild_id] += 1
+
+        await interaction.response.send_message(
+            f"❤️ Kuku received love!\n"
+            f"Total Loves: **{love_count[guild_id]}** 💖",
+            ephemeral=True
+        )
+
+
+    # ❓ Help
+    @discord.ui.button(label="Help", emoji="❓", style=discord.ButtonStyle.secondary)
+    async def help_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        embed = discord.Embed(
+            title="🎵 Kuku Music Controls",
+            description="Cozy controls for your music 💖",
+            color=discord.Color.purple()
+        )
+
+        embed.add_field(
+            name="⏸️ Pause",
+            value="Pause or resume music",
+            inline=False
+        )
+
+        embed.add_field(
+            name="⏭️ Skip",
+            value="Skip current song",
+            inline=False
+        )
+
+        embed.add_field(
+            name="🔁 Repeat",
+            value="Loop current song",
+            inline=False
+        )
+
+        embed.add_field(
+            name="♾️ Autoplay",
+            value="Automatically play songs",
+            inline=False
+        )
+
+        embed.add_field(
+            name="❤️ Love",
+            value="Give Kuku some love 😭",
+            inline=False
+        )
+
+        await interaction.response.send_message(
+            embed=embed,
+            ephemeral=True
+        )
+      
+      
 
 #############################################################################################
 YDL_OPTIONS = {
@@ -103,39 +224,66 @@ FFMPEG_OPTIONS = {
 #____________________________________________________________________________________________
 # this is for music bot to play song but it will save other song as well
 music_queue={}#empty dictionsry which will help store song 
+#------------------------------------------------------------------------------------------
+
+
+
+
 async def play_next(ctx):
 
     guild_id = ctx.guild.id
     vc = ctx.voice_client
+
+    if vc and vc.channel:
+        human = [m for m in vc.channel.members if not m.bot]
+        if len(human) == 0:
+            await vc.disconnect()
+            return
+        if not music_queue[guild_id]:
+             async def leave_if_idle():
+                  await asyncio.sleep(300)
+
+    # if queue empty
     if guild_id not in music_queue or not music_queue[guild_id]:
-         if autoplay_servers.get(guild_id) == True:
-            search_query = random.choice(["top english songs",
-                                          "lofi music",
-                                          "top hindi songs",
-                                          "anime songs",
-                                          "phonk",
-                                          "pop hits"])
+
+        if autoplay_servers.get(guild_id) == True:
+
+            search_query = random.choice([
+                "top english songs",
+                "lofi music",
+                "top hindi songs",
+                "anime songs",
+                "phonk",
+                "pop hits",
+                "soft Arijit singh songs"
+            ])
+
             with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
-                 info = ydl.extract_info(
+                info = ydl.extract_info(
                     f"ytsearch1:{search_query}",
-                    download=False)
-                 video = info['entries'][0]
-                 music_queue[guild_id] = [{
+                    download=False
+                )
+
+                video = info['entries'][0]
+
+                music_queue[guild_id] = [{
                     "url": video['url'],
                     "title": video['title']
                 }]
-         else:
+        else:
             return
-    if not music_queue[guild_id]:
-        return
-    if repeat_modes.get(guild_id)== True:
-         song = music_queue[guild_id][0]
+
+    # repeat system
+    if repeat_modes.get(guild_id) == True:
+        song = music_queue[guild_id][0]
     else:
-         song=music_queue[guild_id].pop(0)
+        song = music_queue[guild_id].pop(0)
+
     source = await discord.FFmpegOpusAudio.from_probe(
         song["url"],
         **FFMPEG_OPTIONS
     )
+
     def after_play(error):
         if error:
             print(error)
@@ -143,8 +291,8 @@ async def play_next(ctx):
         bot.loop.create_task(play_next(ctx))
 
     if vc.is_playing():
-         return
-    
+        return
+
     vc.play(source, after=after_play)
 
     embed = discord.Embed(
@@ -152,9 +300,20 @@ async def play_next(ctx):
         description=song["title"],
         color=discord.Color.red()
     )
+
     view = MusicControls(vc)
-    await ctx.send(embed=embed,view=view)
-#------------------------------------------------------------------------------------------
+
+    await ctx.send(embed=embed, view=view)
+
+
+
+
+
+
+
+
+
+
 @bot.command()
 async def kuku(ctx):
 
@@ -184,6 +343,7 @@ async def kuku(ctx):
     else:
         await ctx.send("I'm already in VC 😎")
 #________________________________________________________________________________________
+
 
 
 #____________________________________________________________________________________________
@@ -239,7 +399,7 @@ async def on_member_join(member):
           return
       channel = bot.get_channel(channel_id)
       if channel:
-            embed= create_welcome_embed()
+            embed= create_welcome_embed(member)
             await channel.send(embed=embed)
 #########################################################################################
 #________________________________________________________________________________________
@@ -332,6 +492,8 @@ async def skip(ctx):
             await ctx.send("skipped")
       else:
             await ctx.send("nothing is playing")
+#______________________________________________________________________________________
+
 
 #_________________________________________________________________________________________--
 
@@ -356,7 +518,7 @@ async def stop(ctx):
           vc.stop()
           guild_id = ctx.guild.id
           if guild_id in music_queue:
-               music_queue[guild_id].clean()
+               music_queue[guild_id].clear()
                await ctx.send("kuku stopped the music")
      else:
           await ctx.send("nothing playing")
@@ -368,9 +530,9 @@ async def repeat(ctx,mode=None):
           await ctx.send("🔁 repeat enabled")
      elif mode == "off":
           repeat_modes[guild_id]=False
-          await ctx.send("repeat disable")
+          await ctx.send("❌repeat disable")
      else:
-          await ctx.send("use:repeat on/off")
+          await ctx.send("use: !repeat on/off")
 
           
 #________________________________________________________________________________________
@@ -383,47 +545,143 @@ async def on_member_remove(member):
 #pil/pillow libary used fir working with images
 # pil is on work we will se it later
 
+@bot.tree.command(name="help", description="Shows all Kuku bot commands")
+async def help(interaction: discord.Interaction):
 
-#hidden vc
+    embed = discord.Embed(
+        title="🎵 Kuku Music Bot Help",
+        description="✨ Cozy music bot with cute controls and vibes 💖",
+        color=discord.Color.from_rgb(255, 105, 180)
+    )
 
-@bot.event 
-async def on_ready():
-     await bot.tree.sync()
-     print(f"logged in as {bot.user}")
+    # MUSIC
+    embed.add_field(
+        name="🎶 Music Commands",
+        value=(
+            "`!play <song>` → Play music\n"
+            "`!pause` → Pause / Resume music\n"
+            "`!skip` → Skip current song\n"
+            "`!stop` → Stop music\n"
+            "`!repeat on/off` → Toggle repeat\n"
+            "`!autoplay on/off` → Toggle autoplay"
+        ),
+        inline=False
+    )
+
+    # BUTTONS
+    embed.add_field(
+        name="🎛️ Music Buttons",
+        value=(
+            "⏸️ Pause music\n"
+            "⏭️ Skip song\n"
+            "🔁 Repeat current song\n"
+            "♾️ Autoplay songs\n"
+            "❤️ Give love to Kuku\n"
+            "❓ Open help menu"
+        ),
+        inline=False
+    )
+
+    # WELCOME
+    embed.add_field(
+        name="🌸 Welcome System",
+        value=(
+            "`!setwelcome #channel` → Set welcome channel\n"
+            "`!testwelcome` → Test welcome message"
+        ),
+        inline=False
+    )
+
+    # EXTRA
+    embed.add_field(
+        name="💖 Extra Features",
+        value=(
+            "• Love Counter ❤️\n"
+            "• Repeat System 🔁\n"
+            "• Autoplay ♾️\n"
+            "• Cozy Welcome Messages 🌸\n"
+            "• Interactive Buttons ✨"
+        ),
+        inline=False
+    )
+     # SECRET VC
+    embed.add_field(
+        name="🕵️ Secret VC",
+        value=(
+            "`/setsecretvc` → Set secret VC\n"
+            "`/secretentry` → Join secret VC"
+        ),
+        inline=False
+    )
 
 
-secret_vcs={}
-bot.tree.command(name="secretentry")
-async def secretentry(interaction:discord.Interaction):
-     guild_id= interaction.guild.id
-     if guild_id not in secret_vcs:
-          await interaction.response.send_message("no secret VC configured😔",
-                                                  ephemeral=True)
-          return
-     vc = interaction.guild.get_channel(secret_vcs[guild_id])
-     await asyncio.sleep(2)
-     await interaction.user.move_to(vc)
+    embed.set_footer(
+        text="Made with ❤️ by Kuku"
+    )
 
+    await interaction.response.send_message(
+        embed=embed,
+        ephemeral=True
+    )
 
-#admins can set it
-@bot.tree.command(name="setsecretvc")
+secret_vcs = {}
+@bot.tree.command(name="setsecretvc", description="Set a secret voice channel")
 @app_commands.checks.has_permissions(administrator=True)
-async def setsecretvc(interaction,channel:discord.VoiceChannel):
-     secret_vcs[interaction.guild.id]= channel.id
-     await interaction.response.send_message(f"secret VC SET TO {channel.name}")
+async def setsecretvc(
+    interaction: discord.Interaction,
+    channel: discord.VoiceChannel
+):
 
+    secret_vcs[interaction.guild.id] = channel.id
 
+    embed = discord.Embed(
+        title="🕵️ Secret VC Set",
+        description=f"Secret VC is now {channel.mention} ✨",
+        color=discord.Color.purple()
+    )
 
+    await interaction.response.send_message(
+        embed=embed,
+        ephemeral=True
+    )
+@bot.tree.command(name="secretentry", description="Join the secret VC")
+async def secretentry(interaction: discord.Interaction):
 
+    guild_id = interaction.guild.id
 
+    if guild_id not in secret_vcs:
 
+        await interaction.response.send_message(
+            "❌ No secret VC configured",
+            ephemeral=True
+        )
 
+        return
 
+    vc = interaction.guild.get_channel(secret_vcs[guild_id])
 
+    if vc is None:
 
+        await interaction.response.send_message(
+            "❌ Secret VC not found",
+            ephemeral=True
+        )
 
+        return
 
+    await interaction.user.move_to(vc)
 
+    await interaction.response.send_message(
+        f"✨ Welcome to {vc.name}",
+        ephemeral=True
+    )
+@bot.event
+async def on_ready():
+
+    await bot.tree.sync()
+
+    print(f"Logged in as {bot.user}")
+    print("Slash commands synced!")
 
 load_dotenv()
 TOKEN= os.getenv("DISCORD_TOKEN")
