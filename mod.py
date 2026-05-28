@@ -21,8 +21,7 @@ def create_welcome_embed(member):#member when ever they come they got hello from
         color=discord.Color.from_rgb(255, 105, 180)
     )
           embed.set_thumbnail(url=member.display_avatar.url)
-          embed.set_image(
-        url="https://tenor.com/en-GB/view/congratulations-congrats-good-job-well-done-good-gif-13901289319277654188")
+          embed.set_image(url="")
           embed.set_footer(
         text=f"You are member #{member.guild.member_count} ✨"
     )
