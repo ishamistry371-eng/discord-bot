@@ -21,7 +21,7 @@ def create_welcome_embed(member):#member when ever they come they got hello from
         color=discord.Color.from_rgb(255, 105, 180)
     )
           embed.set_thumbnail(url=member.display_avatar.url)
-          embed.set_image(url="https://media.tenor.com/6A9PQotS4eYAAAAm/i%27m-gay-gay.webp")
+          embed.set_image(url="https://media.tenor.com/bl-A7jwBiWoAAAAm/gif-pet.webp")
           embed.set_footer(
         text=f"You are member #{member.guild.member_count} ✨"
     )
@@ -255,6 +255,7 @@ async def play_next(ctx):
                 "phonk",
                 "pop hits",
                 "soft Arijit singh songs"
+                "kpop treading song"
             ])
 
             with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
@@ -267,7 +268,8 @@ async def play_next(ctx):
 
                 music_queue[guild_id] = [{
                     "url": video['url'],
-                    "title": video['title']
+                    "title": video['title'],
+                    "thumbnail":video.get['thumbnail']
                 }]
         else:
             return
@@ -285,7 +287,7 @@ async def play_next(ctx):
 
     def after_play(error):
         if error:
-            print(error)
+            print(f"sorry but i am facing this error {error} ")
 
         bot.loop.create_task(play_next(ctx))
 
@@ -299,6 +301,7 @@ async def play_next(ctx):
         description=song["title"],
         color=discord.Color.red()
     )
+    embed.set_image(url=song["thumbnail"])
 
     view = MusicControls(vc)
 
@@ -439,6 +442,7 @@ async def play(ctx,*,query):#its
                         video_entry=info
                   url = video_entry['url']
                   title = video_entry['title']
+                  thumbnail= video_entry.get("thumbnail")
                   source = await discord.FFmpegOpusAudio.from_probe(url, **FFMPEG_OPTIONS)
                   #stop current song
                   vc= ctx.voice_client
@@ -446,7 +450,8 @@ async def play(ctx,*,query):#its
                   if guild_id not in music_queue:
                         music_queue[guild_id]=[]
                   music_queue[guild_id].append({"url":url,
-                                          "title":title
+                                          "title":title,
+                                          "thumbnail":thumbnail
                                           })
                   embed= discord.Embed(title="Added to Queue",
                                        description=title,
